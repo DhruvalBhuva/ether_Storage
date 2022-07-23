@@ -1,16 +1,17 @@
 const ethers = require("ethers");
+require("dotenv").config();
 const fs = require("fs");
 
 const main = async () => {
-  const provider = new ethers.providers.JsonRpcProvider(
-    "http://127.0.0.1:7545" // Ganache localhost
-  );
+  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL); // Ganache localhost
 
-  // Replace with your own private key
-  const wallet = new ethers.Wallet(
-    "82dbfb6183a2f300bdd432b04e03e6b04899fbb3a70a62fdcbf23605213f5e80",
-    provider
-  );
+  // Using environment variables
+  //   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+  // Using encrypted JSON key
+  const encryptedJsonKey = JSON.parse(fs.readFileSync("./.encryptedJsonKey.json", "utf8"));
+  let wallet2 = await ethers.Wallet.fromEncryptedJson(encryptedJsonKey, process.env.PRIVATE_KEY_PASSWORD);
+  wallet2 = wallet2.connect(provider);
 
   const abi = fs.readFileSync("./SimpleStorage_sol_SimpleStorage.abi", "utf8");
   const binart = fs.readFileSync(
@@ -18,7 +19,7 @@ const main = async () => {
     "utf8"
   );
 
-  const contarctFactory = new ethers.ContractFactory(abi, binart, wallet);
+  const contarctFactory = new ethers.ContractFactory(abi, binart, wallet2);
 
   //   // Deploy the contract ideal as deploy(), if want to change in parameters such as gasPrise etc, use the parameter
   const contract = await contarctFactory.deploy();
